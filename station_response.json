@@ -1,0 +1,107 @@
+[
+  {
+    "number": 1190100,
+    "longitude": 16372134,
+    "latitude": 48208547,
+    "name": "",
+    "meta": "Wien"
+  },
+  {
+    "number": 1290401,
+    "longitude": 16375326,
+    "latitude": 48185507,
+    "name": "Wien Hbf (U)",
+    "meta": ""
+  },
+  {
+    "number": 1192101,
+    "longitude": 16400046,
+    "latitude": 48256387,
+    "name": "",
+    "meta": "Wien Floridsdorf"
+  },
+  {
+    "number": 1292101,
+    "longitude": 16400046,
+    "latitude": 48256387,
+    "name": "Wien Floridsdorf Bahnhof (U)",
+    "meta": ""
+  },
+  {
+    "number": 1191901,
+    "longitude": 16365536,
+    "latitude": 48248540,
+    "name": "",
+    "meta": "Wien Heiligenstadt"
+  },
+  {
+    "number": 1291903,
+    "longitude": 16365446,
+    "latitude": 48249034,
+    "name": "Wien Heiligenstadt Bahnhof (U)",
+    "meta": ""
+  },
+  {
+    "number": 1191401,
+    "longitude": 16261118,
+    "latitude": 48197355,
+    "name": "",
+    "meta": "Wien Hütteldorf"
+  },
+  {
+    "number": 1291401,
+    "longitude": 16261118,
+    "latitude": 48197355,
+    "name": "Wien Hütteldorf Bahnhof (U)",
+    "meta": ""
+  },
+  {
+    "number": 1292001,
+    "longitude": 16384908,
+    "latitude": 48241753,
+    "name": "Wien Handelskai Bahnhst (U)",
+    "meta": ""
+  },
+  {
+    "number": 1292106,
+    "longitude": 16403588,
+    "latitude": 48267768,
+    "name": "Wien Brünner Straße Bahnhst",
+    "meta": ""
+  },
+  {
+    "number": 1191801,
+    "longitude": 16329085,
+    "latitude": 48231325,
+    "name": "",
+    "meta": "Wien Gersthof"
+  },
+  {
+    "number": 1291801,
+    "longitude": 16329085,
+    "latitude": 48231325,
+    "name": "Wien Gersthof Bahnhst",
+    "meta": ""
+  },
+  {
+    "number": 1191701,
+    "longitude": 16315287,
+    "latitude": 48223388,
+    "name": "",
+    "meta": "Wien Hernals"
+  },
+  {
+    "number": 1291701,
+    "longitude": 16315359,
+    "latitude": 48223577,
+    "name": "Wien Hernals Bahnhst",
+    "meta": ""
+  },
+  {
+    "number": 1192103,
+    "longitude": 16395920,
+    "latitude": 48274015,
+    "name": "",
+    "meta": "Wien Jedlersdorf"
+  }
+]
