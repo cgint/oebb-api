@@ -175,37 +175,18 @@ export function trackTrainJourney(trainName, stationIds) {
  */
 function authenticate() {
     return new Promise((resolve, reject) => {
-        const userId = Math.random().toString(36).substring(2, 15);
+        // Skip the authentication with tickets.oebb.at which now returns 403
+        // Instead, we'll use an anonymous approach for the SCOTTY API
+        console.log('Using direct SCOTTY API without authentication token...');
         
-        request({
-            url: "https://tickets.oebb.at/api/domain/v3/init",
-            method: "GET",
-            json: true,
-            headers: { Channel: "inet" },
-            qs: { userId: userId },
-            timeout: 10000
-        }, (error, response, body) => {
-            if (error) {
-                reject(error);
-                return;
-            }
-            
-            if (!body) {
-                reject(new Error("No body in auth response"));
-                return;
-            }
-            
-            if (body.accessToken && body.accessToken !== "") {
-                resolve({
-                    accessToken: body.accessToken,
-                    channel: body.channel,
-                    sessionId: body.sessionId,
-                    supportId: body.supportId,
-                    cookie: 'mock-cookie-value' // ÖBB API seems to no longer require the cookie
-                });
-            } else {
-                reject(new Error("No access token in response"));
-            }
+        // Create a mock authentication object with empty values
+        // The SCOTTY board API doesn't strictly require authentication tokens
+        resolve({
+            accessToken: '',
+            channel: 'inet',
+            sessionId: 'anonymous',
+            supportId: 'direct',
+            cookie: 'mock-cookie-value'
         });
     });
 }
@@ -219,17 +200,22 @@ function authenticate() {
  */
 function getStations(auth, name, count) {
     return new Promise((resolve, reject) => {
+        // Use SCOTTY station suggestion API with the correct parameters
+        console.log(`Searching for stations matching "${name}"...`);
+        
         request({
-            url: "https://tickets.oebb.at/api/hafas/v1/stations",
-            json: true,
-            qs: { count, name },
+            url: "https://fahrplan.oebb.at/bin/ajax-getstop.exe/dn",
             method: "GET",
+            qs: { 
+                start: 1,
+                REQ0JourneyStopsS0A: 1,
+                REQ0JourneyStopsS0G: name,
+                getstop: 1,
+                noEvaluation: 'yes'
+            },
             headers: {
-                cookie: `ts-cookie=${auth.cookie}`,
-                Channel: auth.channel,
-                AccessToken: auth.accessToken,
-                SessionId: auth.sessionId,
-                'x-ts-supportid': "WEB_" + auth.supportId
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "application/json, text/javascript, */*"
             }
         }, (error, response, body) => {
             if (error) {
@@ -242,7 +228,95 @@ function getStations(auth, name, count) {
                 return;
             }
             
-            resolve(body);
+            try {
+                // The response is in format: SLs.sls={"suggestions":[...]}
+                const match = body.match(/SLs\.sls\s*=\s*(\{.*\})/s);
+                if (match && match[1]) {
+                    const data = JSON.parse(match[1]);
+                    console.log(`Found ${data.suggestions ? data.suggestions.length : 0} stations`);
+                    
+                    // Transform to similar format as the original API
+                    const stations = data.suggestions ? data.suggestions.map(s => {
+                        return {
+                            number: s.extId,
+                            name: s.value,
+                            meta: s.value,
+                            xcoord: s.xcoord,
+                            ycoord: s.ycoord,
+                            location: {
+                                longitude: s.xcoord ? parseFloat(s.xcoord) / 1000000 : 0,
+                                latitude: s.ycoord ? parseFloat(s.ycoord) / 1000000 : 0,
+                                distanceInKm: 0
+                            }
+                        };
+                    }) : [];
+                    
+                    resolve(stations);
+                } else {
+                    console.error('Could not parse station suggestions response');
+                    reject(new Error('Could not parse station suggestions response'));
+                }
+            } catch (e) {
+                console.error('Error parsing station data:', e.message);
+                reject(new Error(`Error parsing station data: ${e.message}`));
+            }
+        });
+    });
+}
+
+/**
+ * Alternative method to search for stations
+ * @param {string} name - Station name to search for
+ * @param {number} count - Maximum number of results
+ * @returns {Promise<Array>} - Array of station objects
+ */
+function searchStationsAlternative(name, count) {
+    return new Promise((resolve, reject) => {
+        // Use station search from the timetable API
+        request({
+            url: "https://fahrplan.oebb.at/bin/query.exe/dn",
+            method: "GET",
+            qs: {
+                look_stopid: name,
+                REQ0JourneyStopsS0A: 1,
+                REQ0JourneyStopsS0G: name,
+                REQ0JourneyStopsB: count,
+                tpl: "stop2json"
+            },
+            headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36"
+            }
+        }, (error, response, body) => {
+            if (error) {
+                reject(error);
+                return;
+            }
+            
+            console.log('Alternative search response:', body.substring(0, 200));
+            
+            try {
+                // Response is likely to be direct JSON
+                const data = JSON.parse(body);
+                
+                const stations = data.stops ? data.stops.map(s => {
+                    return {
+                        number: s.extId || s.id,
+                        name: s.name,
+                        meta: s.name,
+                        location: {
+                            longitude: 0,
+                            latitude: 0,
+                            distanceInKm: 0
+                        }
+                    };
+                }) : [];
+                
+                console.log(`Found ${stations.length} stations via alternative endpoint`);
+                resolve(stations);
+            } catch (e) {
+                console.error('Error parsing alternative station data:', e.message);
+                resolve([]); // Return empty array as last resort
+            }
         });
     });
 }
